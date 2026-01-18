@@ -2,172 +2,94 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Adivinhe o Número – Visual + Relatório PDF</title>
-
-<!-- Biblioteca para gerar PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+<title>Adivinhe o Número - Libras</title>
 <style>
 body {
-    background-color: #f4f4f4;
-    text-align: center;
-    padding: 20px;
-    font-family: Arial, sans-serif;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #f4f4f4;
 }
 
-.container {
-    max-width: 900px;
-    margin: auto;
+#container {
+  max-width: 600px;
+  margin: 30px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,.1);
 }
 
-/* Topo com tempo e tentativas */
-.topo {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 15px;
-}
+#jogo { display: none; }
 
-.caixa-info {
-    background: #eef2ff;
-    padding: 10px 15px;
-    border-radius: 10px;
-    font-weight: bold;
-    font-size: 18px;
-}
-
-/* Avatar grande */
-.avatar img {
-    width: 280px;
-    margin-bottom: 15px;
-}
-
-/* Grid dos números (grandes) */
-.grid-numeros {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 15px;
-    max-width: 800px;
-    margin: auto;
-}
-
-.btn-numero {
-    font-size: 40px;
-    padding: 18px;
-    background: white;
-    border: 2px solid #ccc;
-    border-radius: 15px;
-    cursor: pointer;
-}
-
-.btn-numero:disabled {
-    background: #ddd;
-}
-
-/* Controles */
-.controles {
-    margin: 15px 0;
+input {
+  display: block;
+  width: 90%;
+  margin: 10px auto;
+  padding: 8px;
 }
 
 button {
-    padding: 10px 15px;
-    margin: 5px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+  padding: 10px 15px;
+  margin: 5px;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-#play {
-    background-color: #ff9800;
-    color: white;
+.numeros button {
+  font-size: 22px;
+  width: 50px;
+  height: 50px;
+  margin: 5px;
 }
 
-#reiniciar {
-    background-color: #2196F3;
-    color: white;
-}
-
-#pdf {
-    background-color: #4CAF50;
-    color: white;
-}
-
-/* Nome do aluno */
-.nome-aluno {
-    margin-bottom: 10px;
-}
-
-/* Ranking */
-.ranking {
-    margin-top: 20px;
-    padding: 10px;
-    background: #f0f7ff;
-    border-radius: 12px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    border: 1px solid #ccc;
-    padding: 6px;
-}
-
-th {
-    background: #dde7ff;
+#avatar {
+  width: 180px;
+  margin: 15px 0;
 }
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<div id="container">
 
-<div class="topo">
-    <div class="caixa-info">⏳ Tempo: <span id="tempo">30</span>s</div>
-    <div class="caixa-info">🎯 Tentativas: <span id="tentativas">0</span></div>
+<h2>Adivinhe o Número (1–10)</h2>
+
+<!-- FORMULÁRIO INICIAL -->
+<div id="formInicio">
+  <p>Digite seu nome e e-mail @handtalk.me para começar:</p>
+  <input id="nomeAluno" placeholder="Seu nome completo">
+  <input id="emailAluno" placeholder="seu@handtalk.me">
+  <button onclick="iniciarJogo()">▶️ Play</button>
 </div>
 
-<div class="nome-aluno">
-    <input type="text" id="nomeAluno" placeholder="Nome do aluno">
-</div>
+<!-- TELA DO JOGO -->
+<div id="jogo">
 
-<div class="controles">
-    <button id="play" onclick="iniciar()">▶️ Play</button>
-    <button id="reiniciar" onclick="reiniciar()" disabled>🔄 Reiniciar</button>
-    <button id="pdf" onclick="gerarPDF()" disabled>📄 Criar relatório</button>
-</div>
+  <img id="avatar" src="avatar_maior.gif" alt="Avatar em Libras">
 
-<div class="avatar">
-    <img id="avatar" src="" alt="Avatar em Libras">
-</div>
+  <p>Tempo: <span id="tempo">30</span>s</p>
+  <p>Tentativas: <span id="tentativas">0</span></p>
 
-<div class="grid-numeros">
-    <button class="btn-numero" onclick="clicarNumero(1)" disabled>1️⃣</button>
-    <button class="btn-numero" onclick="clicarNumero(2)" disabled>2️⃣</button>
-    <button class="btn-numero" onclick="clicarNumero(3)" disabled>3️⃣</button>
-    <button class="btn-numero" onclick="clicarNumero(4)" disabled>4️⃣</button>
-    <button class="btn-numero" onclick="clicarNumero(5)" disabled>5️⃣</button>
-    <button class="btn-numero" onclick="clicarNumero(6)" disabled>6️⃣</button>
-    <button class="btn-numero" onclick="clicarNumero(7)" disabled>7️⃣</button>
-    <button class="btn-numero" onclick="clicarNumero(8)" disabled>8️⃣</button>
-    <button class="btn-numero" onclick="clicarNumero(9)" disabled>9️⃣</button>
-    <button class="btn-numero" onclick="clicarNumero(10)" disabled>🔟</button>
-</div>
+  <p id="feedback">Escolha um número 👇</p>
 
-<div class="ranking">
-<h3>🏆 Ranking por Aluno</h3>
-<table>
-<thead>
-<tr>
-<th>Aluno</th>
-<th>Tentativas</th>
-</tr>
-</thead>
-<tbody id="listaRanking"></tbody>
-</table>
+  <div class="numeros">
+    <button onclick="tentar(1)">1️⃣</button>
+    <button onclick="tentar(2)">2️⃣</button>
+    <button onclick="tentar(3)">3️⃣</button>
+    <button onclick="tentar(4)">4️⃣</button>
+    <button onclick="tentar(5)">5️⃣</button><br>
+    <button onclick="tentar(6)">6️⃣</button>
+    <button onclick="tentar(7)">7️⃣</button>
+    <button onclick="tentar(8)">8️⃣</button>
+    <button onclick="tentar(9)">9️⃣</button>
+    <button onclick="tentar(10)">🔟</button>
+  </div>
+
+  <br>
+  <button id="botaoRelatorio" style="display:none" onclick="gerarPDF()">
+    📄 Criar relatório (PDF)
+  </button>
+
 </div>
 
 </div>
@@ -179,98 +101,107 @@ let tempoRestante = 30;
 let timer;
 let jogoFinalizado = false;
 
-// BLOQUEIO DE UMA ÚNICA TENTATIVA
+// BLOQUEIO: só pode jogar uma vez
 if (localStorage.getItem("atividadeConcluida") === "sim") {
-    document.body.innerHTML = `
-        <h2>⚠️ Atividade já realizada</h2>
-        <p>Você só pode jogar uma vez.</p>
-    `;
+  document.body.innerHTML = `
+    <div style="text-align:center;margin-top:50px;">
+      <h2>⚠️ Atividade já realizada</h2>
+      <p>Você só pode jogar uma vez.</p>
+    </div>
+  `;
 }
 
 function iniciarJogo() {
-    const nome = document.getElementById("nomeAluno").value.trim();
-    const email = document.getElementById("emailAluno").value.trim();
+  const nome = document.getElementById("nomeAluno").value.trim();
+  const email = document.getElementById("emailAluno").value.trim();
 
-    if (!nome) {
-        alert("Digite seu nome.");
-        return;
+  if (!nome) {
+    alert("Digite seu nome.");
+    return;
+  }
+
+  if (!email.endsWith("@handtalk.me")) {
+    alert("Use seu e-mail @handtalk.me");
+    return;
+  }
+
+  document.getElementById("formInicio").style.display = "none";
+  document.getElementById("jogo").style.display = "block";
+
+  numeroSecreto = Math.floor(Math.random() * 10) + 1;
+  tentativas = 0;
+  tempoRestante = 30;
+  jogoFinalizado = false;
+
+  document.getElementById("tentativas").textContent = tentativas;
+  document.getElementById("tempo").textContent = tempoRestante;
+  document.getElementById("feedback").textContent = "Escolha um número 👇";
+  document.getElementById("avatar").src = "avatar_maior.gif";
+
+  timer = setInterval(() => {
+    tempoRestante--;
+    document.getElementById("tempo").textContent = tempoRestante;
+
+    if (tempoRestante <= 0) {
+      clearInterval(timer);
+      finalizarJogo("⏰ Tempo acabou!");
     }
-
-    if (!email.endsWith("@handtalk.me")) {
-        alert("Use seu e-mail @handtalk.me");
-        return;
-    }
-
-    document.getElementById("formInicio").style.display = "none";
-    document.getElementById("jogo").style.display = "block";
-
-    numeroSecreto = Math.floor(Math.random() * 10) + 1;
-    tentativas = 0;
-    tempoRestante = 30;
-    jogoFinalizado = false;
-
-    timer = setInterval(() => {
-        tempoRestante--;
-        document.getElementById("tempo").textContent = tempoRestante;
-
-        if (tempoRestante <= 0) {
-            clearInterval(timer);
-            finalizarJogo("Tempo acabou ⏰");
-        }
-    }, 1000);
+  }, 1000);
 }
 
 function tentar(numero) {
-    if (jogoFinalizado) return;
+  if (jogoFinalizado) return;
 
-    tentativas++;
+  tentativas++;
 
-    if (numero > numeroSecreto) {
-        document.getElementById("feedback").innerHTML = "⬇️ Tente menor";
-        document.getElementById("avatar").src = "avatar_menor.gif";
-    } else if (numero < numeroSecreto) {
-        document.getElementById("feedback").innerHTML = "⬆️ Tente maior";
-        document.getElementById("avatar").src = "avatar_maior.gif";
-    } else {
-        clearInterval(timer);
-        finalizarJogo("🎉 Você acertou!");
-    }
+  if (numero > numeroSecreto) {
+    document.getElementById("feedback").innerHTML = "⬇️ Tente menor";
+    document.getElementById("avatar").src = "avatar_menor.gif";
+  } 
+  else if (numero < numeroSecreto) {
+    document.getElementById("feedback").innerHTML = "⬆️ Tente maior";
+    document.getElementById("avatar").src = "avatar_maior.gif";
+  } 
+  else {
+    clearInterval(timer);
+    document.getElementById("avatar").src = "avatar_acertou.gif";
+    finalizarJogo("🎉 Você acertou!");
+  }
 
-    document.getElementById("tentativas").textContent = tentativas;
+  document.getElementById("tentativas").textContent = tentativas;
 }
 
 function finalizarJogo(mensagem) {
-    jogoFinalizado = true;
-    localStorage.setItem("atividadeConcluida", "sim");
+  jogoFinalizado = true;
+  localStorage.setItem("atividadeConcluida", "sim");
 
-    document.getElementById("feedback").innerHTML = mensagem;
-    document.getElementById("botaoRelatorio").style.display = "block";
+  document.getElementById("feedback").innerHTML = mensagem;
+  document.getElementById("botaoRelatorio").style.display = "block";
 }
 
 function gerarPDF() {
-    const nome = document.getElementById("nomeAluno").value;
-    const email = document.getElementById("emailAluno").value;
+  const nome = document.getElementById("nomeAluno").value;
+  const email = document.getElementById("emailAluno").value;
 
-    const conteudo = `
-    Relatório de Atividade - Adivinhe o Número
+  const conteudo = `
+Relatório de Atividade - Adivinhe o Número
 
-    Nome: ${nome}
-    E-mail: ${email}
+Nome: ${nome}
+E-mail: ${email}
 
-    Número secreto: ${numeroSecreto}
-    Tentativas: ${tentativas}
-    Tempo restante: ${tempoRestante}s
-    Resultado: ${tempoRestante > 0 ? "Concluído" : "Tempo esgotado"}
-    `;
+Número secreto: ${numeroSecreto}
+Tentativas: ${tentativas}
+Tempo restante: ${tempoRestante}s
+Resultado: ${tempoRestante > 0 ? "Concluído" : "Tempo esgotado"}
+  `;
 
-    const blob = new Blob([conteudo], { type: "application/pdf" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "relatorio_libras_numero.pdf";
-    link.click();
+  const blob = new Blob([conteudo], { type: "application/pdf" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "relatorio_libras_numero.pdf";
+  link.click();
 }
 </script>
-
 
 </body>
 </html>
