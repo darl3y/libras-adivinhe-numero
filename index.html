@@ -174,144 +174,103 @@ th {
 
 <script>
 let numeroSecreto;
-let tentativas;
-let tempo;
+let tentativas = 0;
+let tempoRestante = 30;
 let timer;
-let ranking = [];
-let acertos = 0;
-let erros = 0;
+let jogoFinalizado = false;
 
-function iniciar() {
-    let nome = document.getElementById("nomeAluno").value.trim();
-    if (nome === "") {
-        alert("Digite o nome do aluno");
+// BLOQUEIO DE UMA ÚNICA TENTATIVA
+if (localStorage.getItem("atividadeConcluida") === "sim") {
+    document.body.innerHTML = `
+        <h2>⚠️ Atividade já realizada</h2>
+        <p>Você só pode jogar uma vez.</p>
+    `;
+}
+
+function iniciarJogo() {
+    const nome = document.getElementById("nomeAluno").value.trim();
+    const email = document.getElementById("emailAluno").value.trim();
+
+    if (!nome) {
+        alert("Digite seu nome.");
         return;
     }
 
+    if (!email.endsWith("@handtalk.me")) {
+        alert("Use seu e-mail @handtalk.me");
+        return;
+    }
+
+    document.getElementById("formInicio").style.display = "none";
+    document.getElementById("jogo").style.display = "block";
+
     numeroSecreto = Math.floor(Math.random() * 10) + 1;
     tentativas = 0;
-    tempo = 30;
-    acertos = 0;
-    erros = 0;
+    tempoRestante = 30;
+    jogoFinalizado = false;
 
-    document.getElementById("tentativas").innerText = tentativas;
-    document.getElementById("tempo").innerText = tempo;
-    document.getElementById("avatar").src = "";
+    timer = setInterval(() => {
+        tempoRestante--;
+        document.getElementById("tempo").textContent = tempoRestante;
 
-    document.querySelectorAll(".btn-numero").forEach(b => b.disabled = false);
-    document.getElementById("reiniciar").disabled = false;
-    document.getElementById("pdf").disabled = true;
-
-    clearInterval(timer);
-    timer = setInterval(contarTempo, 1000);
+        if (tempoRestante <= 0) {
+            clearInterval(timer);
+            finalizarJogo("Tempo acabou ⏰");
+        }
+    }, 1000);
 }
 
-function contarTempo() {
-    tempo--;
-    document.getElementById("tempo").innerText = tempo;
+function tentar(numero) {
+    if (jogoFinalizado) return;
 
-    if (tempo <= 0) {
-        clearInterval(timer);
-        fimDeJogo(false);
-    }
-}
-
-function clicarNumero(palpite) {
     tentativas++;
-    document.getElementById("tentativas").innerText = tentativas;
 
-    if (palpite > numeroSecreto) {
-        erros++;
+    if (numero > numeroSecreto) {
+        document.getElementById("feedback").innerHTML = "⬇️ Tente menor";
         document.getElementById("avatar").src = "avatar_menor.gif";
-    } 
-    else if (palpite < numeroSecreto) {
-        erros++;
+    } else if (numero < numeroSecreto) {
+        document.getElementById("feedback").innerHTML = "⬆️ Tente maior";
         document.getElementById("avatar").src = "avatar_maior.gif";
-    } 
-    else {
-        acertos++;
-        fimDeJogo(true);
-    }
-}
-
-function fimDeJogo(acertou) {
-    clearInterval(timer);
-    document.querySelectorAll(".btn-numero").forEach(b => b.disabled = true);
-
-    let nome = document.getElementById("nomeAluno").value.trim();
-
-    if (acertou) {
-        document.getElementById("avatar").src = "avatar_acertou.gif";
-        ranking.push({ nome, tentativas });
-        ranking.sort((a, b) => a.tentativas - b.tentativas);
-        atualizarRanking();
     } else {
-        document.getElementById("avatar").src = "avatar_tempo.gif";
+        clearInterval(timer);
+        finalizarJogo("🎉 Você acertou!");
     }
 
-    document.getElementById("pdf").disabled = false;
+    document.getElementById("tentativas").textContent = tentativas;
 }
 
-function atualizarRanking() {
-    let lista = document.getElementById("listaRanking");
-    lista.innerHTML = "";
+function finalizarJogo(mensagem) {
+    jogoFinalizado = true;
+    localStorage.setItem("atividadeConcluida", "sim");
 
-    ranking.forEach(r => {
-        lista.innerHTML += `
-        <tr>
-            <td>${r.nome}</td>
-            <td>${r.tentativas}</td>
-        </tr>`;
-    });
-}
-
-function reiniciar() {
-    iniciar();
-}
-
-function avaliarDesempenho() {
-    let total = tentativas;
-    if (total === 0) return "SEM DADOS";
-
-    let taxaErro = (erros / total) * 100;
-    let taxaAcerto = 100 - taxaErro;
-
-    if (taxaAcerto >= 80) return "BOM ✅";
-    if (taxaAcerto >= 50) return "REGULAR ⚠️";
-    return "RUIM ❌";
+    document.getElementById("feedback").innerHTML = mensagem;
+    document.getElementById("botaoRelatorio").style.display = "block";
 }
 
 function gerarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const nome = document.getElementById("nomeAluno").value;
+    const email = document.getElementById("emailAluno").value;
 
-    let nome = document.getElementById("nomeAluno").value.trim();
-    let desempenho = avaliarDesempenho();
-    let data = new Date().toLocaleString("pt-BR");
+    const conteudo = `
+    Relatório de Atividade - Adivinhe o Número
 
-    doc.setFontSize(16);
-    doc.text("RELATÓRIO – ATIVIDADE VISUAL EM LIBRAS", 10, 20);
+    Nome: ${nome}
+    E-mail: ${email}
 
-    doc.setFontSize(12);
-    doc.text(`Aluno: ${nome}`, 10, 35);
-    doc.text(`Data/Hora: ${data}`, 10, 45);
-    doc.text("Atividade: Adivinhe o Número (1–10)", 10, 55);
+    Número secreto: ${numeroSecreto}
+    Tentativas: ${tentativas}
+    Tempo restante: ${tempoRestante}s
+    Resultado: ${tempoRestante > 0 ? "Concluído" : "Tempo esgotado"}
+    `;
 
-    doc.text(`Tempo usado: ${30 - tempo}s`, 10, 70);
-    doc.text(`Tentativas: ${tentativas}`, 10, 80);
-    doc.text(`Acertos: ${acertos}`, 10, 90);
-    doc.text(`Erros: ${erros}`, 10, 100);
-
-    doc.text(`Desempenho geral: ${desempenho}`, 10, 115);
-
-    doc.text("Análise automática:", 10, 130);
-    doc.text("- Observou o avatar e ajustou escolhas", 10, 140);
-    doc.text("- Tomada de decisão visual adequada", 10, 150);
-    doc.text("- Ritmo compatível com tempo disponível", 10, 160);
-
-    doc.save(`relatorio_${nome}.pdf`);
+    const blob = new Blob([conteudo], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "relatorio_libras_numero.pdf";
+    link.click();
 }
 </script>
+
 
 </body>
 </html>
